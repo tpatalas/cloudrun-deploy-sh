@@ -1,4 +1,4 @@
-module.exports = withBundleAnalyzer({
+module.exports = {
   poweredByHeader: false,
   reactStrictMode: true,
   eslint: {
@@ -9,4 +9,4 @@ module.exports = withBundleAnalyzer({
   compiler: {
     removeConsole: process.env.NODE_ENV !== "production" ? false : true,
   },
-});
+};
