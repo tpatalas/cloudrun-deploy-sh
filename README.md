@@ -1,71 +1,44 @@
-# With Docker
+<div align="center">
 
-This examples shows how to use Docker with Next.js based on the [deployment documentation](https://nextjs.org/docs/deployment#docker-image). Additionally, it contains instructions for deploying to Google Cloud Run. However, you can use any container-based deployment host.
+# Google Cloud Run `Deploy.sh` & `Cloud Build` Example with Next.js
+
+[![License](https://img.shields.io/github/license/tpatalas/cloudrun-deploy-sh?color=blue&logo=lincense)]()
+[![Last Commit](https://img.shields.io/github/last-commit/tpatalas/cloudrun-deploy-sh?color=blue)](https://github.com/tpatalas/cloudrun-deploy-sh)
+[![Project Status](https://img.shields.io/badge/project%20status-active-blue)](https://github.com/tpatalas/cloudrun-deploy-sh/tree/feature/update-README#project-status)
+
+</div>
+
+This repository serves as a practical demonstration of how to use the pre-existing `deploy.sh` script for building Docker images locally, pushing them to the Google Container Registry, and deploying to Google Cloud Run. In addition, it showcases an example of employing Google Cloud Build to handle the same tasks as `deploy.sh`, but within a CI/CD framework.
+
+> Please note that while this repository offers deployment examples, it does not
+> provide comprehensive guidance for setting up Google Cloud Platform products.
+> Its main aim is to exemplify deployment methodologies.
 
 ## How to use
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+> Important: For production deployment, utilize a CI/CD process like Google Cloud
+> Build or Github Actions, instead of the `deploy.sh` script.
 
-```bash
-npx create-next-app --example with-docker nextjs-docker
-# or
-yarn create next-app --example with-docker nextjs-docker
-# or
-pnpm create next-app --example with-docker nextjs-docker
+1. Create `.env.local` file locally. (you may check out the example of `.example.env.local`)
+2. Add required information to build, push, and deploy docker image into Google
+   Cloud Run and Google Cloud Registry.
+3. You may also need to create the secrets on Google Cloud Secret Manager.
+4. Run following command to initiate the docker build, push and deploy:
+
+   ```bash
+   sh deploy.sh
+   ```
+
+## Installation
+
+### Clone the repository to your favorite directory
+
+1. Clone the repository by running the following command:
+
+```sh
+git clone https://github.com/tpatalas/cloudrun-deploy-sh.git
 ```
 
-## Using Docker
+## License
 
-1. [Install Docker](https://docs.docker.com/get-docker/) on your machine.
-1. Build your container: `docker build -t nextjs-docker .`.
-1. Run your container: `docker run -p 3000:3000 nextjs-docker`.
-
-You can view your images created with `docker images`.
-
-### In existing projects
-
-To add support for Docker to an existing project, just copy the `Dockerfile` into the root of the project and add the following to the `next.config.js` file:
-
-```js
-// next.config.js
-module.exports = {
-  // ... rest of the configuration.
-  output: 'standalone',
-}
-```
-
-This will build the project as a standalone app inside the Docker image.
-
-## Deploying to Google Cloud Run
-
-1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) so you can use `gcloud` on the command line.
-1. Run `gcloud auth login` to log in to your account.
-1. [Create a new project](https://cloud.google.com/run/docs/quickstarts/build-and-deploy) in Google Cloud Run (e.g. `nextjs-docker`). Ensure billing is turned on.
-1. Build your container image using Cloud Build: `gcloud builds submit --tag gcr.io/PROJECT-ID/helloworld --project PROJECT-ID`. This will also enable Cloud Build for your project.
-1. Deploy to Cloud Run: `gcloud run deploy --image gcr.io/PROJECT-ID/helloworld --project PROJECT-ID --platform managed`. Choose a region of your choice.
-
-   - You will be prompted for the service name: press Enter to accept the default name, `helloworld`.
-   - You will be prompted for [region](https://cloud.google.com/run/docs/quickstarts/build-and-deploy#follow-cloud-run): select the region of your choice, for example `us-central1`.
-   - You will be prompted to **allow unauthenticated invocations**: respond `y`.
-
-Or click the button below, authorize the script, and select the project and region when prompted:
-
-[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run/?git_repo=https://github.com/vercel/next.js.git&dir=examples/with-docker)
-
-## Running Locally
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+This project is licensed under the terms of the MIT License. See the [LICENSE](https://github.com/tpAtalas/cloudrun-deploy-sh/blob/master/LICENSE) file for details.

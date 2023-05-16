@@ -1,13 +1,18 @@
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+# For more info: https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+
+# WARN:
+# If the local machine is based on Apple silicon, such as Macbook M1, it is required to add 
+# `--platform=linux/amd64` as shown below. Your build command is still the same as before as 
+# long as the `--platform` flag is specified. 
+# The example of docker build `docker build -t [docker image] [path]` 
+
+# FROM node:18-alpine AS deps
+FROM --platform=linux/amd64 node:18-alpine AS deps 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
@@ -15,38 +20,55 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-
-# Rebuild the source code only when needed
-FROM base AS builder
+# FROM node:18-alpine AS builder
+FROM --platform=linux/amd64 node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED 1
+
+################################################################################ 
+################# Enviornment Variable Build Time Substitution #################
+################################################################################
+# NOTE:
+# When environment variables are added to Google Cloud Run's environment, 
+# they are only available at runtime and not during build time. However, 
+# Next.js may require environment variables during build time. To address 
+# this issue, build-time substitution can be used to temporarily hold the 
+# substitution and get replaced with Google Cloud Run's environment variables 
+# during deployment with deploy.sh.
+# --
+# It's important to note that environment variables defined in Google Secret 
+# Manager are available at both build time and runtime, but they may not be 
+# free to use.
+#
+# Set build-time arguments. Add BUILD_ prefix to your enviornment variable
+ARG BUILD_HOSTNAME
+# Set environment variables based on build-time arguments by adding GCR_ prefix
+ENV GCR_HOSTNAME $BUILD_HOSTNAME
+################################################################################
 
 RUN yarn build
 
-# If using npm comment out above and use below instead
-# RUN npm run build
-
-# Production image, copy all the files and run next
-FROM base AS runner
+# FROM node:18-alpine AS runner
+FROM --platform=linux/amd64 node:18-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.env ./.env
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/public/ ./public
+
+
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
